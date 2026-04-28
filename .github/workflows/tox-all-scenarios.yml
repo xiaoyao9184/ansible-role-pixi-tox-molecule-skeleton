@@ -1,0 +1,48 @@
+---
+name: Tox All Scenarios
+
+on:
+  workflow_dispatch:
+    inputs:
+      tox_args:
+        description: Optional extra tox CLI args, e.g. -vvv
+        required: false
+        default: "-vvv"
+      molecule_options:
+        description: Optional extra molecule CLI args, e.g. --debug
+        required: false
+        default: "--debug"
+
+jobs:
+  discover-molecule-scenarios:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Discover scenario names
+        id: discover-molecule-scenarios
+        run: |
+          scenarios_json="$(python3 scripts/generate_tox_matrix.py discover-molecule-scenarios)"
+          echo "scenarios=$scenarios_json" >> "$GITHUB_OUTPUT"
+          echo "$scenarios_json" | jq .
+
+    outputs:
+      scenarios: ${{ steps.discover-molecule-scenarios.outputs.scenarios }}
+
+  scenario:
+    needs: discover-molecule-scenarios
+    if: ${{ needs.discover-molecule-scenarios.outputs.scenarios != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario_name: ${{ fromJson(needs.discover-molecule-scenarios.outputs.scenarios) }}
+    uses: ./.github/workflows/tox-per-scenario.yml
+    with:
+      scenario: ${{ matrix.scenario_name }}
+      tox_args: ${{ inputs.tox_args || '' }}
+      molecule_options: ${{ inputs.molecule_options || '' }}

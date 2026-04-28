@@ -1,0 +1,411 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid": "830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `default` in pixi.
+            "name": "tox-ansible: matrix generate: filter-tox-envs",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_ansible_matrix.py",
+            "args": [
+                "filter-tox-envs",
+                "--scenario-name",
+                "${input:moleculeScenario}",
+            ],
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `default` in pixi.
+            "name": "tox-ansible: matrix generate: discover-molecule-scenarios",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_ansible_matrix.py",
+            "args": [
+                "discover-molecule-scenarios",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter from `integration-py*` in tox.
+            "name": "tox-ansible: molecule test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "molecule",
+            "env": {
+                // fix debugpy PATH
+                "PATH": "${workspaceFolder}/.tox/${input:toxAnsibleEnvironment}/bin:${env:PATH}",
+                "MOLECULE_SCENARIO_NAME": "${input:moleculeScenario}",
+                "MOLECULE_GLOB": "${workspaceFolder}/molecule/${input:moleculeScenario}@${input:moleculeCore}/molecule.yml",
+                "XDG_CACHE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.cache",
+                "ANSIBLE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible",
+                "ANSIBLE_ROLES_PATH": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible/roles",
+            },
+            "args": [
+                "--debug",
+                "-vvv",
+                "test",
+                "--scenario-name",
+                "${input:moleculeScenario}"
+            ],
+            "preLaunchTask": "pixi: tox-ansible molecule generate",
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter from `integration-py*` in tox.
+            "name": "tox-ansible: pytest integration",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "env": {
+                // fix debugpy PATH
+                "PATH": "${workspaceFolder}/.tox/${input:toxAnsibleEnvironment}/bin:${env:PATH}",
+                "MOLECULE_SCENARIO_NAME": "${input:moleculeScenario}",
+                "MOLECULE_GLOB": "${workspaceFolder}/molecule/${input:moleculeScenario}@${input:moleculeCore}/molecule.yml",
+                "XDG_CACHE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.cache",
+                "ANSIBLE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible",
+                "ANSIBLE_ROLES_PATH": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible/roles",
+            },
+            "args": [
+                "--ansible-unit-inject-only",
+                "./tests/integration"
+            ],
+            "preLaunchTask": "pixi: tox-ansible molecule generate",
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter from `integration-py*` in tox.
+            "name": "tox-ansible: molecule generate",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_ansible_molecule.py",
+            "env": {
+                "TOXENV": "${input:toxAnsibleEnvironment}"
+            },
+            "args": [
+                "create",
+                "--scenario-name",
+                "${input:moleculeScenario}"
+            ],
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `default` in pixi.
+            "name": "tox-ansible: galaxy generate",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_ansible_galaxy.py",
+            "args": [
+                "--galaxy-output",
+                "tox/${input:toxInterpreter}/galaxy.yml"
+            ],
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `py*` in pixi.
+            "name": "tox-ansible: env test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tox",
+            "env": {
+                // Reordered Input: make this input first
+                "_TOXENV": "${input:toxAnsibleEnvironment}",
+                "MOLECULE_SCENARIO_NAME": "${input:moleculeScenario}",
+            },
+            "args": [
+                "--ansible",
+                "-e",
+                "${input:toxAnsibleEnvironment}",
+                "-c",
+                "tox/${input:toxInterpreter}/tox-ansible.ini",
+                "-v"
+            ],
+            "preLaunchTask": "pixi: tox-ansible galaxy generate",
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `py*` in pixi.
+            "name": "tox-ansible: env list",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tox",
+            "args": [
+                "--ansible",
+                "-c",
+                "tox/${input:toxInterpreter}/tox-ansible.ini",
+                "-l",
+                "-v"
+            ],
+            "preLaunchTask": "pixi: tox-ansible galaxy generate",
+            "justMyCode": false
+        },
+
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `default` in pixi.
+            "name": "tox: matrix generate: filter-tox-envs",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_matrix.py",
+            "args": [
+                "filter-tox-envs",
+                "--scenario-name",
+                "${input:moleculeScenario}",
+            ],
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `default` in pixi.
+            "name": "tox: matrix generate: discover-molecule-scenarios",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_matrix.py",
+            "args": [
+                "discover-molecule-scenarios",
+            ],
+            "justMyCode": false
+        },
+
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `default` in pixi.
+            "name": "tox: deps generate",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/scripts/generate_tox_deps.py",
+            "args": [
+                "--pixi",
+                "${workspaceFolder}/pixi.toml",
+                "--pyproject-output",
+                "tox/${input:toxInterpreter}/pyproject.toml",
+            ],
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `py*` in pixi.
+            "name": "tox: env test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tox",
+            "env": {
+                // Reordered Input: make this input first
+                "_TOXENV": "${input:toxEnvironment}",
+                "MOLECULE_SCENARIO_NAME": "${input:moleculeScenario}",
+            },
+            "args": [
+                "-e",
+                "${input:toxEnvironment}",
+                "-c",
+                "tox/${input:toxInterpreter}/tox.ini",
+                "-v"
+            ],
+            "preLaunchTask": "pixi: tox deps generate",
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `py*` in pixi.
+            "name": "tox: env list",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tox",
+            "args": [
+                "-l",
+                "-c",
+                "tox/${input:toxInterpreter}/tox.ini",
+                "-v"
+            ],
+            "justMyCode": false
+        },
+
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `core*` in pixi.
+            "name": "molecule: scenario test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "molecule",
+            "args": [
+                "--debug",
+                "-vvv",
+                "test",
+                "--scenario-name",
+                "${input:moleculeScenario}"
+            ],
+            "env": {
+                // fix debugpy PATH
+                "PATH": "${workspaceFolder}/.pixi/envs/${input:moleculeCore}/bin:${env:PATH}",
+                "MOLECULE_GLOB": "${workspaceFolder}/molecule/${input:moleculeCore}/*/molecule.yml",
+                "XDG_CACHE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.cache",
+                "ANSIBLE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible",
+                "ANSIBLE_ROLES_PATH": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible/roles",
+            },
+            "preLaunchTask": "bash: molecule cache remove",
+            "justMyCode": false
+        },
+        {
+            // Before running the program,
+            // please be sure to select a Python interpreter named `core*` in pixi.
+            "name": "molecule: scenario list",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "molecule",
+            "args": [
+                "--debug",
+                "-vvv",
+                "list"
+            ],
+            "env": {
+                // fix debugpy PATH
+                "PATH": "${workspaceFolder}/.pixi/envs/${input:moleculeCore}/bin:${env:PATH}",
+                "MOLECULE_GLOB": "${workspaceFolder}/molecule/${input:moleculeCore}/*/molecule.yml",
+                "XDG_CACHE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.cache",
+                "ANSIBLE_HOME": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible",
+                "ANSIBLE_ROLES_PATH": "${workspaceFolder}/molecule/${input:moleculeCore}/.ansible/roles",
+            },
+            "justMyCode": false
+        }
+    ],
+    "inputs": [
+        {
+            "id": "toxAnsibleEnvironment",
+            "type": "pickString",
+            "description": "Select the tox ansible environment",
+            "default": "integration-py3.14-2.20",
+            // Consistent with the expanded environments of tox-ansible.ini
+            "options": [
+                "integration-py3.10-2.16",
+                "integration-py3.10-2.17",
+                "integration-py3.11-2.17",
+                "integration-py3.11-2.18",
+                "integration-py3.11-2.19",
+                "integration-py3.12-2.17",
+                "integration-py3.12-2.18",
+                "integration-py3.12-2.19",
+                "integration-py3.12-2.20",
+                "integration-py3.13-2.18",
+                "integration-py3.13-2.19",
+                "integration-py3.13-2.20",
+                "integration-py3.14-2.20",
+            ]
+        },
+
+        {
+            "id": "toxInterpreter",
+            "type": "pickString",
+            "description": "Select the tox interpreter",
+            "default": "py313",
+            // Consistent with pixi environments and tox/* directories
+            "options": [
+                "py314",
+                "py313",
+                "py312",
+                "py311",
+                "py310",
+                "py39",
+                "py38",
+                "py37",
+                "py36",
+                "py35",
+            ]
+        },
+        {
+            "id": "toxEnvironment",
+            "type": "pickString",
+            "description": "Select the tox environment",
+            // VS Code debugpy doesn't support Py3.14 very well;
+            // it doesn't do anything in install_dependency-groups.
+            // Please use other versions or use tasks.
+            "default": "molecule-py3.13-2.20",
+            // Consistent with the expanded environments of tox.ini
+            "options": [
+                "molecule-py3.14-2.20",
+                "molecule-py3.13-2.18",
+                "molecule-py3.13-2.19",
+                "molecule-py3.13-2.20",
+                "molecule-py3.12-2.16",
+                "molecule-py3.12-2.17",
+                "molecule-py3.12-2.18",
+                "molecule-py3.12-2.19",
+                "molecule-py3.12-2.20",
+                "molecule-py3.11-2.14",
+                "molecule-py3.11-2.15",
+                "molecule-py3.11-2.16",
+                "molecule-py3.11-2.17",
+                "molecule-py3.11-2.18",
+                "molecule-py3.11-2.19",
+                "molecule-py3.10-2.12",
+                "molecule-py3.10-2.13",
+                "molecule-py3.10-2.14",
+                "molecule-py3.10-2.15",
+                "molecule-py3.10-2.16",
+                "molecule-py3.10-2.17",
+                "molecule-py3.9-2.10",
+                "molecule-py3.9-2.11",
+                "molecule-py3.9-2.12",
+                "molecule-py3.9-2.13",
+                "molecule-py3.9-2.14",
+                "molecule-py3.9-2.15",
+                "molecule-py3.8-2.9",
+                "molecule-py3.8-2.10",
+                "molecule-py3.8-2.11",
+                "molecule-py3.8-2.12",
+                "molecule-py3.8-2.13",
+                "molecule-py3.7-2.9",
+                "molecule-py3.7-2.10",
+                "molecule-py3.7-2.11",
+                "molecule-py3.6-2.9",
+                "molecule-py3.6-2.10",
+                "molecule-py3.6-2.11",
+                "molecule-py3.5-2.9",
+                "molecule-py3.5-2.10",
+                "molecule-py3.5-2.11",
+            ]
+        },
+
+        {
+            "id": "moleculeCore",
+            "type": "pickString",
+            "description": "Select the Molecule core environment",
+            "default": "core220",
+            // Consistent with pixi environments and molecule/* directories
+            "options": [
+                "core29",
+                "core210",
+                "core211",
+                "core212",
+                "core213",
+                "core214",
+                "core215",
+                "core216",
+                "core217",
+                "core218",
+                "core219",
+                "core220"
+            ]
+        },
+        {
+            "id": "moleculeScenario",
+            "type": "pickString",
+            "description": "Select the Molecule scenario",
+            "default": "default",
+            "options": [
+                "default",
+                "docker"
+            ]
+        }
+    ]
+}

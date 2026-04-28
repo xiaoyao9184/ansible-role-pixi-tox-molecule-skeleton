@@ -1,0 +1,11 @@
+molecule[docker]<5
+molecule-docker<=1.1.0
+paramiko
+flake8
+yamllint
+ansible>=2.9.0,<2.10.0
+ansible-lint<=5.1.3
+ansible-compat<=2.2.7
+rich==10.11.0
+jmespath
+pywinrm==0.4.3

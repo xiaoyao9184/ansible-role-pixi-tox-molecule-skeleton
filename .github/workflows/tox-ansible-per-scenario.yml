@@ -1,0 +1,118 @@
+---
+name: Tox Ansible Per Scenario
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Molecule scenario name
+        required: true
+        type: string
+      tox_args:
+        description: Optional extra tox CLI args
+        required: false
+        default: "-vvv"
+        type: string
+      molecule_options:
+        description: Optional extra molecule CLI args
+        required: false
+        default: "--debug"
+        type: string
+  workflow_call:
+    inputs:
+      scenario:
+        description: Molecule scenario name
+        required: true
+        type: string
+      tox_args:
+        description: Optional extra tox CLI args
+        required: false
+        default: ""
+        type: string
+      molecule_options:
+        description: Optional extra molecule CLI args
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  filter-tox-envs:
+    name: ${{ inputs.scenario }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: v0.67.1
+          cache: true
+
+      - name: Filter tox envs for scenario
+        id: filter-tox-envs
+        run: |
+          matrix_json="$(python3 scripts/generate_tox_ansible_matrix.py filter-tox-envs --scenario-name "${{ inputs.scenario }}")"
+          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+          echo "$matrix_json" | jq .
+
+    outputs:
+      matrix: ${{ steps.filter-tox-envs.outputs.matrix }}
+
+  test-tox-env:
+    needs: filter-tox-envs
+    if: ${{ needs.filter-tox-envs.outputs.matrix != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJson(needs.filter-tox-envs.outputs.matrix) }}
+
+    name: ${{ matrix.entry.name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: v0.67.1
+          cache: true
+          cache-key: pixi-tox-ansible-filter-
+          cache-write: ${{ inputs.scenario == 'default' }}
+          environments: >-
+            py310
+            py311
+            py312
+            py313
+            py314
+
+      - name: Run scenario in tox env
+        id: run_tox
+        env:
+          MOLECULE_OPTIONS: ${{ inputs.molecule_options }}
+          MOLECULE_SCENARIO_NAME: ${{ inputs.scenario }}
+        run: |
+          set +e
+
+          pixi run -e "${{ matrix.entry.pixi_py_env }}" \
+            tox-ansible -e "${{ matrix.entry.tox_env }}" ${{ inputs.tox_args }} \
+            2>&1 | tee tox.log
+
+          rc=${PIPESTATUS[0]}
+
+          if grep -q "__TOX_SKIP__" tox.log; then
+            echo "## Scenario Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "- Scenario: ${{ inputs.scenario }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Env: ${{ matrix.entry.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Reason: unsupported combination" >> $GITHUB_STEP_SUMMARY
+            echo "::notice title=Skipped::${{ matrix.entry.name }}"
+            exit 0
+          fi
+
+          exit $rc

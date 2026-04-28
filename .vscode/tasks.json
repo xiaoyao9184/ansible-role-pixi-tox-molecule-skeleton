@@ -1,0 +1,279 @@
+{
+    "version": "2.0.0",
+    "tasks": [        
+        {
+            "label": "pixi: tox-ansible matrix generate",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox-ansible matrix generate from molecule on pixi default environment'",
+                "&& pixi run -e default python scripts/generate_tox_ansible_matrix.py discover-molecule-scenarios",
+                "&& pixi run -e default python scripts/generate_tox_ansible_matrix.py filter-tox-envs --scenario-name 'default'",
+            ]
+        },
+
+        {
+            "label": "pixi: tox-ansible molecule generate",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox-ansible molecule generate from role on pixi default environment'",
+                "&& pixi run -e default python scripts/generate_tox_ansible_molecule.py create --tox-env ${input:toxAnsibleEnvironment} --scenario-name ${input:moleculeScenario}",
+            ]
+        },
+        {
+            "label": "pixi: tox-ansible galaxy generate",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox-ansible galaxy generate from role on pixi default environment'",
+                "&& pixi run -e default python scripts/generate_tox_ansible_galaxy.py --galaxy-output tox/${input:toxInterpreter}/galaxy.yml",
+            ],
+            "dependsOn": "pixi: tox deps generate",
+        },
+        {
+            "label": "pixi: tox-ansible test",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox-ansible test on python and ansible-core matrix versions'",
+                "&& pixi run -e py314 tox-ansible",
+                "&& pixi run -e py313 tox-ansible",
+                "&& pixi run -e py312 tox-ansible",
+                "&& pixi run -e py311 tox-ansible",
+                "&& pixi run -e py310 tox-ansible",
+            ]
+        },
+        {
+            "label": "pixi: tox-ansible list",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox-ansible test on python and ansible-core matrix versions'",
+                "&& pixi run -e py314 tox-ansible -l",
+                "&& pixi run -e py313 tox-ansible -l",
+                "&& pixi run -e py312 tox-ansible -l",
+                "&& pixi run -e py311 tox-ansible -l",
+                "&& pixi run -e py310 tox-ansible -l",
+            ]
+        },
+
+        {
+            "label": "pixi: tox matrix generate",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox matrix generate from molecule on pixi default environment'",
+                "&& pixi run -e default python scripts/generate_tox_matrix.py discover-molecule-scenarios",
+                "&& pixi run -e default python scripts/generate_tox_matrix.py filter-tox-envs --scenario-name 'default'",
+            ]
+        },
+
+        {
+            "label": "pixi: tox deps generate",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run tox deps generate from pixi on pixi default environment'",
+                "&& pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/${input:toxInterpreter}/pyproject.toml",
+            ]
+        },
+        {
+            "label": "pixi: tox env test",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "MOLECULE_SCENARIO_NAME": "${input:moleculeScenario}",
+                }
+            },
+            "command": [
+                "echo 'run tox test on python and ansible-core matrix environments'",
+                "&& pixi run -e py35 tox",
+                "&& pixi run -e py36 tox",
+                "&& pixi run -e py37 tox",
+                "&& pixi run -e py38 tox",
+                "&& pixi run -e py39 tox",
+                "&& pixi run -e py310 tox",
+                "&& pixi run -e py311 tox",
+                "&& pixi run -e py312 tox",
+                "&& pixi run -e py313 tox",
+                "&& pixi run -e py314 tox",
+            ]
+        },
+        {
+            "label": "pixi: tox env list",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "MOLECULE_SCENARIO_NAME": "${input:moleculeScenario}",
+                }
+            },
+            "command": [
+                "echo 'run tox list on python and ansible-core matrix environments'",
+                "&& pixi run -e py35 tox -l",
+                "&& pixi run -e py36 tox -l",
+                "&& pixi run -e py37 tox -l",
+                "&& pixi run -e py38 tox -l",
+                "&& pixi run -e py39 tox -l",
+                "&& pixi run -e py310 tox -l",
+                "&& pixi run -e py311 tox -l",
+                "&& pixi run -e py312 tox -l",
+                "&& pixi run -e py313 tox -l",
+                "&& pixi run -e py314 tox -l",
+            ]
+        },
+
+        {
+            "label": "bash: molecule cache remove",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run molecule cache remove from bash on molecule core dir'",
+                "&& rm -rdf ${workspaceFolder}/molecule/${input:moleculeCore}/.cache/",
+                "&& rm -rdf ${workspaceFolder}/molecule/${input:moleculeCore}/.ansible/"
+            ]
+        },
+        {
+            "label": "pixi: molecule scenario test",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run molecule test all scenarios on all ansible-core versions'",
+                // ref: [[#unknown_error_with_docker_driver|Skip the Docker scenario in this environment]]
+                "&& pixi run -e core29 molecule test --scenario-name default",
+                // ref: [[#unknown_error_with_docker_driver|Skip the Docker scenario in this environment]]
+                "&& pixi run -e core210 molecule test --scenario-name default",
+                // ref: [[#unknown_error_with_docker_driver|Skip the Docker scenario in this environment]]
+                "&& pixi run -e core211 molecule test --scenario-name default",
+                "&& pixi run -e core212 molecule test --all",
+                "&& pixi run -e core213 molecule test --all",
+                "&& pixi run -e core214 molecule test --all",
+                "&& pixi run -e core215 molecule test --all",
+                "&& pixi run -e core216 molecule test --all",
+                "&& pixi run -e core217 molecule test --all",
+                "&& pixi run -e core218 molecule test --all",
+                "&& pixi run -e core219 molecule test --all",
+                "&& pixi run -e core220 molecule test --all",
+            ]
+        },
+        {
+            "label": "pixi: molecule scenario list",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "echo 'run molecule list all scenarios on all ansible-core versions'",
+                "&& pixi run -e core29 molecule list",
+                "&& pixi run -e core210 molecule list",
+                "&& pixi run -e core211 molecule list",
+                "&& pixi run -e core212 molecule list",
+                "&& pixi run -e core213 molecule list",
+                "&& pixi run -e core214 molecule list",
+                "&& pixi run -e core215 molecule list",
+                "&& pixi run -e core216 molecule list",
+                "&& pixi run -e core217 molecule list",
+                "&& pixi run -e core218 molecule list",
+                "&& pixi run -e core219 molecule list",
+                "&& pixi run -e core220 molecule list",
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "toxAnsibleEnvironment",
+            "type": "pickString",
+            "description": "Select the tox ansible environment",
+            "default": "integration-py3.14-2.20",
+            // Consistent with the expanded environments of tox-ansible.ini
+            "options": [
+                "integration-py3.10-2.16",
+                "integration-py3.10-2.17",
+                "integration-py3.11-2.17",
+                "integration-py3.11-2.18",
+                "integration-py3.11-2.19",
+                "integration-py3.12-2.17",
+                "integration-py3.12-2.18",
+                "integration-py3.12-2.19",
+                "integration-py3.12-2.20",
+                "integration-py3.13-2.18",
+                "integration-py3.13-2.19",
+                "integration-py3.13-2.20",
+                "integration-py3.14-2.20",
+            ]
+        },
+
+        {
+            "id": "toxInterpreter",
+            "type": "pickString",
+            "description": "Select the tox interpreter",
+            "default": "py313",
+            // Consistent with pixi environments and tox/* directories
+            "options": [
+                "py314",
+                "py313",
+                "py312",
+                "py311",
+                "py310",
+                "py39",
+                "py38",
+                "py37",
+                "py36",
+                "py35",
+            ]
+        },
+
+        {
+            "id": "moleculeCore",
+            "type": "pickString",
+            "description": "Select the Molecule core environment",
+            "default": "core220",
+            // Consistent with pixi environments and molecule/* directories
+            "options": [
+                "core29",
+                "core210",
+                "core211",
+                "core212",
+                "core213",
+                "core214",
+                "core215",
+                "core216",
+                "core217",
+                "core218",
+                "core219",
+                "core220"
+            ]
+        },
+        {
+            "id": "moleculeScenario",
+            "type": "pickString",
+            "description": "Select the Molecule scenario name",
+            "default": "default",
+            // Consistent with the molecule/core*/* directory
+            "options": [
+                "default",
+                "docker"
+            ]
+        }
+    ]
+}

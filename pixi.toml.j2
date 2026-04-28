@@ -1,0 +1,438 @@
+[workspace]
+name = "ansible-role-{{ role_name }}"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[feature.py35.dependencies]
+python = "3.5.*"
+pip = "*"
+# cant use pypi dependencies with py35
+tox = "*"
+
+[feature.py35.tasks]
+generate-tox-deps = "echo 'py35 does not use dependencies defined in pixi'"
+tox = { cmd = "tox -c tox/py35/tox.ini", depends-on = ["generate-tox-deps"] }
+
+[feature.py36.dependencies]
+python = "3.6.*"
+pip = "*"
+# cant use pypi dependencies with py36
+tox = "*"
+
+[feature.py36.tasks]
+generate-tox-deps = "echo 'py36 does not use dependencies defined in pixi'"
+tox = { cmd = "tox -c tox/py36/tox.ini", depends-on = ["generate-tox-deps"] }
+
+[feature.py37.dependencies]
+python = "3.7.*"
+pip = "*"
+
+[feature.py37.pypi-dependencies]
+tox = "*"
+
+[feature.py37.tasks]
+generate-tox-deps = "echo 'py36 does not use dependencies defined in pixi'"
+tox = { cmd = "tox -c tox/py37/tox.ini", depends-on = ["generate-tox-deps"] }
+
+[feature.py38.dependencies]
+python = "3.8.*"
+pip = "*"
+
+[feature.py38.pypi-dependencies]
+tox = "*"
+
+[feature.py38.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py38/pyproject.toml"
+tox = { cmd = "tox -c tox/py38/tox.ini", depends-on = ["generate-tox-deps"] }
+
+[feature.py39.dependencies]
+python = "3.9.*"
+pip = "*"
+
+[feature.py39.pypi-dependencies]
+tox = "*"
+
+[feature.py39.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py39/pyproject.toml"
+tox = { cmd = "tox -c tox/py39/tox.ini", depends-on = ["generate-tox-deps"] }
+
+[feature.py310.dependencies]
+python = "3.10.*"
+pip = "*"
+
+[feature.py310.pypi-dependencies]
+tox = "*"
+tox-ansible = "*"
+
+[feature.py310.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py310/pyproject.toml"
+tox = { cmd = "tox -c tox/py310/tox.ini", depends-on = ["generate-tox-deps"] }
+generate-tox-ansible-galaxy = "pixi run -e default python scripts/generate_tox_ansible_galaxy.py --galaxy-output tox/py310/galaxy.yml"
+tox-ansible = { cmd = "tox --ansible -c tox/py310/tox-ansible.ini", depends-on = ["generate-tox-deps", "generate-tox-ansible-galaxy"] }
+
+[feature.py311.dependencies]
+python = "3.11.*"
+pip = "*"
+
+[feature.py311.pypi-dependencies]
+tox = "*"
+tox-ansible = "*"
+
+[feature.py311.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py311/pyproject.toml"
+tox = { cmd = "tox -c tox/py311/tox.ini", depends-on = ["generate-tox-deps"] }
+generate-tox-ansible-galaxy = "pixi run -e default python scripts/generate_tox_ansible_galaxy.py --galaxy-output tox/py311/galaxy.yml"
+tox-ansible = { cmd = "tox --ansible -c tox/py311/tox-ansible.ini", depends-on = ["generate-tox-deps", "generate-tox-ansible-galaxy"] }
+
+[feature.py312.dependencies]
+python = "3.12.*"
+pip = "*"
+
+[feature.py312.pypi-dependencies]
+tox = "*"
+tox-ansible = "*"
+
+[feature.py312.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py312/pyproject.toml"
+tox = { cmd = "tox -c tox/py312/tox.ini", depends-on = ["generate-tox-deps"] }
+generate-tox-ansible-galaxy = "pixi run -e default python scripts/generate_tox_ansible_galaxy.py --galaxy-output tox/py312/galaxy.yml"
+tox-ansible = { cmd = "tox --ansible -c tox/py312/tox-ansible.ini", depends-on = ["generate-tox-deps", "generate-tox-ansible-galaxy"] }
+
+[feature.py313.dependencies]
+python = "3.13.*"
+pip = "*"
+
+[feature.py313.pypi-dependencies]
+tox = "*"
+tox-ansible = "*"
+
+[feature.py313.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py313/pyproject.toml"
+tox = { cmd = "tox -c tox/py313/tox.ini", depends-on = ["generate-tox-deps"] }
+generate-tox-ansible-galaxy = "pixi run -e default python scripts/generate_tox_ansible_galaxy.py --galaxy-output tox/py313/galaxy.yml"
+tox-ansible = { cmd = "tox --ansible -c tox/py313/tox-ansible.ini", depends-on = ["generate-tox-deps", "generate-tox-ansible-galaxy"] }
+
+[feature.py314.dependencies]
+python = "3.14.*"
+pip = "*"
+
+[feature.py314.pypi-dependencies]
+tox = "*"
+tox-ansible = "*"
+
+[feature.py314.tasks]
+generate-tox-deps = "pixi run -e default python scripts/generate_tox_deps.py --pyproject-output tox/py314/pyproject.toml"
+tox = { cmd = "tox -c tox/py314/tox.ini", depends-on = ["generate-tox-deps"] }
+generate-tox-ansible-galaxy = "pixi run -e default python scripts/generate_tox_ansible_galaxy.py --galaxy-output tox/py314/galaxy.yml"
+tox-ansible = { cmd = "tox --ansible -c tox/py314/tox-ansible.ini", depends-on = ["generate-tox-deps", "generate-tox-ansible-galaxy"] }
+
+[feature.ansible-core-2-9.pypi-dependencies]
+molecule = { version = "<5", extras = ["docker"]}
+molecule-docker = "<=1.1.0"
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible = ">=2.9.0,<2.10.0"
+# last support ansible-base is ansible-lint <= 5.1.3
+ansible-lint = "<=5.1.3"
+# last support ansible-base is ansible-lint <= 5.1.3
+ansible-compat = "<=2.2.7"
+# fix dependencies `rich` break change
+# see https://github.com/ansible/ansible-lint/issues/1795
+rich = "==10.11.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-9.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-9.tasks.molecule.env]
+ANSIBLE_CONFIG = "$PIXI_PROJECT_ROOT/molecule/ansible.old-galaxy.cfg"
+MOLECULE_GLOB = "molecule/core29/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core29/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core29/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core29/.ansible/roles"
+
+[feature.ansible-core-2-10.pypi-dependencies]
+molecule = { version = "<5", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+# BUG in 2.10.17
+# fix `ImportError: cannot import name 'should_retry_error' from 'ansible.galaxy.api'`
+ansible-base = "==2.10.16"
+ansible = ">=3.0.0,<4.0.0"
+# last support ansible-base is ansible-lint <= 5.1.3
+ansible-lint = "<=5.1.3"
+# last support ansible-base is ansible-lint <= 5.1.3
+ansible-compat = "<=2.2.7"
+# fix dependencies `rich` break change
+#  see https://github.com/ansible/ansible-lint/issues/1795
+rich = "==10.11.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-10.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-10.tasks.molecule.env]
+ANSIBLE_CONFIG = "$PIXI_PROJECT_ROOT/molecule/ansible.old-galaxy.cfg"
+MOLECULE_GLOB = "molecule/core210/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core210/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core210/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core210/.ansible/roles"
+
+[feature.ansible-core-2-11.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.11.0,<2.12.0"
+ansible = ">=4.0.0,<5.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-11.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-11.tasks.molecule.env]
+ANSIBLE_CONFIG = "$PIXI_PROJECT_ROOT/molecule/ansible.old-galaxy.cfg"
+MOLECULE_GLOB = "molecule/core211/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core211/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core211/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core211/.ansible/roles"
+
+[feature.ansible-core-2-12.pypi-dependencies]
+# ref: [[#glob_notwork|Go to molecule/README.md#glob_notwork]]
+molecule = "<6"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.12.0,<2.13.0"
+ansible = ">=5.0.0,<6.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-12.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-12.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core212/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core212/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core212/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core212/.ansible/roles"
+
+[feature.ansible-core-2-13.pypi-dependencies]
+# ref: [[#glob_notwork|Go to molecule/README.md#glob_notwork]]
+molecule = "<6"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.13.0,<2.14.0"
+ansible = ">=6.0.0,<7.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-13.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-13.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core213/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core213/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core213/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core213/.ansible/roles"
+
+[feature.ansible-core-2-14.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.14.0,<2.15.0"
+ansible = ">=7.0.0,<8.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-14.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-14.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core214/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core214/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core214/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core214/.ansible/roles"
+
+[feature.ansible-core-2-15.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.15.0,<2.16.0"
+ansible = ">=8.0.0,<9.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+# fix https://github.com/docker/docker-py/issues/3256
+requests = "<=2.32.0"
+
+[feature.ansible-core-2-15.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-15.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core215/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core215/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core215/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core215/.ansible/roles"
+
+[feature.ansible-core-2-16.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.16.0,<2.17.0"
+ansible = ">=9.0.0,<10.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+
+[feature.ansible-core-2-16.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-16.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core216/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core216/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core216/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core216/.ansible/roles"
+
+[feature.ansible-core-2-17.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.17.0,<2.18.0"
+ansible = ">=10.0.0,<11.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+
+[feature.ansible-core-2-17.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-17.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core217/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core217/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core217/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core217/.ansible/roles"
+
+[feature.ansible-core-2-18.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.18.0,<2.19.0"
+ansible = ">=11.0.0,<12.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+
+[feature.ansible-core-2-18.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-18.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core218/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core218/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core218/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core218/.ansible/roles"
+
+[feature.ansible-core-2-19.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.19.0,<2.20.0"
+ansible = ">=12.0.0,<13.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+
+[feature.ansible-core-2-19.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-19.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core219/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core219/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core219/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core219/.ansible/roles"
+
+[feature.ansible-core-2-20.pypi-dependencies]
+molecule = "*"
+molecule-plugins = { version = "*", extras = ["docker"]}
+paramiko = "*"
+flake8 = "*"
+yamllint = "*"
+ansible-lint = "*"
+ansible-core = ">=2.20.0,<2.21.0"
+ansible = ">=13.0.0,<14.0.0"
+jmespath = "*"
+pywinrm = "==0.4.3"
+
+[feature.ansible-core-2-20.tasks.molecule]
+cmd = "molecule"
+
+[feature.ansible-core-2-20.tasks.molecule.env]
+MOLECULE_GLOB = "molecule/core220/*/molecule.yml"
+XDG_CACHE_HOME = "$PIXI_PROJECT_ROOT/molecule/core220/.cache"
+ANSIBLE_HOME = "$PIXI_PROJECT_ROOT/molecule/core220/.ansible"
+ANSIBLE_ROLES_PATH = "$PIXI_PROJECT_ROOT/molecule/core220/.ansible/roles"
+
+[environments]
+py35 = { features = ["py35"], no-default-feature = true }
+py36 = { features = ["py36"], no-default-feature = true }
+py37 = { features = ["py37"], no-default-feature = true }
+py38 = { features = ["py38"], no-default-feature = true }
+py39 = { features = ["py39"], no-default-feature = true }
+py310 = { features = ["py310"], no-default-feature = true }
+py311 = { features = ["py311"], no-default-feature = true }
+py312 = { features = ["py312"], no-default-feature = true }
+py313 = { features = ["py313"], no-default-feature = true }
+py314 = { features = ["py314"], no-default-feature = true }
+
+core29 = { features = ["ansible-core-2-9", "py38"], no-default-feature = true }
+core210 = { features = ["ansible-core-2-10", "py39"], no-default-feature = true }
+core211 = { features = ["ansible-core-2-11", "py39"], no-default-feature = true }
+core212 = { features = ["ansible-core-2-12", "py310"], no-default-feature = true }
+core213 = { features = ["ansible-core-2-13", "py310"], no-default-feature = true }
+core214 = { features = ["ansible-core-2-14", "py311"], no-default-feature = true }
+core215 = { features = ["ansible-core-2-15", "py311"], no-default-feature = true }
+core216 = { features = ["ansible-core-2-16", "py312"], no-default-feature = true }
+core217 = { features = ["ansible-core-2-17", "py312"], no-default-feature = true }
+core218 = { features = ["ansible-core-2-18", "py313"], no-default-feature = true }
+core219 = { features = ["ansible-core-2-19", "py313"], no-default-feature = true }
+core220 = { features = ["ansible-core-2-20", "py314"], no-default-feature = true }
+
+# for scripts `generate_tox_deps`
+default = { features = ["py314"] }

@@ -1,0 +1,121 @@
+# VS Code Debug Guide
+
+This guide explains how to use the VS Code launch configurations in this workspace to debug the Python code paths of `molecule` and `tox`.
+
+Debugging `molecule` across different Ansible core versions helps reveal behavioral differences between Molecule and Ansible combinations, which makes it easier to write and adjust `molecule.yml` files with confidence.
+
+Debugging `tox` with the newest supported Python version helps us understand how Molecule execution environments are created across different Python and Ansible core combinations, which is useful when improving test coverage.
+
+The role itself usually does not need to be debugged here. The main goal of this setup is to debug the tooling around the role.
+
+## For debug launch
+
+### 1. Select the Python interpreter
+
+Before starting any debug session, set the workspace interpreter in VS Code:
+
+1. Press `Ctrl+Shift+P`.
+2. Run `Python: Select Interpreter`.
+3. Choose the Python virtual environment from this workspace that matches what you want to debug.
+
+you must select the interpreter from the `.pixi` directory inside this project. interpreter selection:
+
+- If you want to debug `molecule`, select the interpreter from the `.pixi` environment for the target `core2*` environment, such as `core29`, `core214`, or `core220`.
+- If you want to debug `tox`, select the interpreter from the `.pixi` environment for `tox`.
+
+### 2. Debug `molecule`
+
+Use a matching `core2*` interpreter when you want to inspect Molecule logic under a specific Ansible core version.
+
+Available debug entries include:
+
+- `molecule: scenario list`
+- `molecule: scenario test`
+
+Typical workflow:
+
+1. Select the `.pixi` interpreter for the target `core2*` environment.
+2. Open the Run and Debug view in VS Code.
+3. Start either `molecule: scenario list` or `molecule: scenario test`.
+4. Before the debug session starts, VS Code will ask for the Molecule core version again.
+5. Choose the same core version that matches the Python interpreter you selected.
+
+For example:
+
+- If the interpreter comes from the `core220` environment, choose `core220` in the prompt.
+- If the interpreter comes from the `core29` environment, choose `core29` in the prompt.
+
+This version match is important because the launch configuration sets environment-specific values such as:
+
+- `MOLECULE_GLOB`
+- `XDG_CACHE_HOME`
+- `ANSIBLE_HOME`
+- `ANSIBLE_ROLES_PATH`
+
+These values are built from the selected core version, so mismatching the interpreter and the prompt can lead to confusing results.
+
+### 3. Debug `tox`
+
+Use the `tox` interpreter when you want to inspect how `tox` resolves environments and builds Molecule test environments.
+
+Available debug entries include:
+
+- `tox: env list`
+- `tox: env test`
+
+Typical workflow:
+
+1. Select the `.pixi` interpreter for the `tox` environment.
+2. Open the Run and Debug view in VS Code.
+3. Start `tox: env list` to inspect available environments.
+4. Start `tox: env test` to debug a specific tox environment.
+5. When prompted, choose the target tox environment from the picker.
+
+This is especially useful for understanding how different Python versions and Ansible core versions affect environment creation and execution behavior.
+
+## For no-debug tasks
+
+If you don't want to debug individual scenarios, you can run all tests directly.
+The project provides VS Code tasks; simply select the corresponding task to run them in batches.
+
+Typical workflow:
+
+1. Press `Ctrl+Shift+P`.
+2. Run `Tasks: Run Task`.
+3. Choose the task you want to run.
+
+### [[unknown_error_with_docker_driver|Error with docker driver]]
+
+For unknown reasons, errors occur in local VS Code Pixi environment,
+but work normally in GitHub Actions Tox environment.
+
+- Pixi core29 environment:
+
+    ```bash
+    INFO     Running docker > destroy
+    ...
+    TASK [Destroy molecule instance(s)]
+    ...
+    An exception occurred during task execution. To see the full traceback, use -vvv. The error was: ValueError: ansible_collections.community.docker.plugins.module_utils._module_container.base.__spec__ is None
+    ```
+
+- Pixi core210 environment:
+
+    ```bash
+    INFO     Running docker > destroy
+    ...
+    TASK [Destroy molecule instance(s)]
+    ...
+    Could not find imported module support code for ansible_collections.community.docker.plugins.modules.docker_container.  Looked for (['ansible.module_utils.compat.version.LooseVersion', 'ansible.module_utils.compat.version'])
+    ```
+
+- Pixi core210 environment:
+
+    ```bash
+    INFO     Running docker > dependency
+    ...
+    Traceback (most recent call last):
+    File "/mnt/f/code/topic.ansible-role/ansible-role-skeleton/{{ role_name }}/.pixi/envs/core211/lib/python3.9/site-packages/resolvelib/resolvers.py", line 171, in _merge_into_criterion
+        crit = self.state.criteria
+    KeyError: 'community.docker'
+    ```

@@ -1,0 +1,9 @@
+.pixi/
+
+molecule/*/.cache/
+molecule/*/.ansible/
+
+.tox/
+tox/*/pyproject.toml
+tox/*/galaxy.yml
+__pycache__/
