@@ -7,6 +7,7 @@ import argparse
 import json
 import pathlib
 import re
+from typing import Any
 
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -21,6 +22,62 @@ SKIP_MOLECULE_SCENARIO_RE = re.compile(
     r"^\s*(?P<ansible_factor>\d+\.\d+):\s*SKIP_MOLECULE_SCENARIO\s*=\s*(?P<scenario_names>.*?)\s*$",
     re.MULTILINE,
 )
+
+
+def parse_scalar(value: str) -> Any:
+    value = value.strip()
+    if not value:
+        return ""
+
+    if value[0] in {'"', "'"}:
+        return value[1:-1]
+
+    if value in {"true", "True"}:
+        return True
+    if value in {"false", "False"}:
+        return False
+    if value in {"null", "Null", "none", "None", "~"}:
+        return None
+
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    return value
+
+
+def parse_simple_yaml(text: str) -> dict[str, Any]:
+    data: dict[str, Any] = {}
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or line == "---":
+            continue
+
+        if raw_line[:1].isspace():
+            raise ValueError(f"Unsupported nested YAML content: {raw_line}")
+
+        key, sep, value = line.partition(":")
+        if not sep:
+            raise ValueError(f"Unsupported YAML line: {raw_line}")
+
+        data[key.strip()] = parse_scalar(value)
+
+    return data
+
+
+def load_github_config(scenario_dir: pathlib.Path) -> dict[str, Any]:
+    for github_path in (scenario_dir / "github.yaml", scenario_dir / "github.yml"):
+        if github_path.is_file():
+            return parse_simple_yaml(github_path.read_text(encoding="utf-8"))
+
+    return {}
 
 
 def parse_py_envs(raw: str | None) -> list[str]:
@@ -164,6 +221,7 @@ def filter_tox_envs_for_scenario(scenario_name: str, py_envs: list[str]) -> list
                 "ansible_factor": ansible_factor,
                 "core_name": core_name,
                 "scenario_dir": str(scenario_dir.relative_to(PROJECT_ROOT)),
+                "github": load_github_config(scenario_dir),
             }
         )
 

@@ -66,13 +66,14 @@ jobs:
         entry: ${{ fromJson(needs.filter-tox-envs.outputs.matrix) }}
 
     name: ${{ matrix.entry.name }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.entry.github['runs-on'] }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Pixi
+      - name: Unix | Set up Pixi
+        if: runner.os != 'Windows'
         uses: prefix-dev/setup-pixi@v0.9.5
         with:
           pixi-version: v0.67.1
@@ -83,7 +84,8 @@ jobs:
             default
             ${{ matrix.entry.pixi_py_env }}
 
-      - name: Run scenario in tox env
+      - name: Unix | Run scenario in tox env
+        if: runner.os != 'Windows'
         id: run_tox
         env:
           MOLECULE_OPTIONS: ${{ inputs.molecule_options }}
@@ -102,6 +104,286 @@ jobs:
             echo "- Scenario: ${{ inputs.scenario }}" >> $GITHUB_STEP_SUMMARY
             echo "- Env: ${{ matrix.entry.name }}" >> $GITHUB_STEP_SUMMARY
             echo "- Reason: unsupported combination" >> $GITHUB_STEP_SUMMARY
+            echo "::notice title=Skipped::${{ matrix.entry.name }}"
+            exit 0
+          fi
+
+          exit $rc
+
+      - name: Windows | Reset runneradmin password for WinRM testing
+        if: runner.os == 'Windows'
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $username = 'runneradmin'
+          $passwordPlain = "C0mplex!Pass-${{ github.run_id }}"
+          $securePassword = ConvertTo-SecureString `
+            $passwordPlain `
+            -AsPlainText `
+            -Force
+
+          $user = Get-LocalUser -Name $username -ErrorAction SilentlyContinue
+
+          if ($null -eq $user) {
+            throw "Local user '$username' does not exist"
+          }
+
+          Set-LocalUser `
+            -Name $username `
+            -Password $securePassword
+
+          Write-Host "Password reset completed for $username"
+
+          New-ItemProperty `
+            -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' `
+            -Name LocalAccountTokenFilterPolicy `
+            -Value 1 `
+            -PropertyType DWord `
+            -Force | Out-Null
+
+      - name: Windows | Configure WinRM service and HTTP listener
+        if: runner.os == 'Windows'
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          Enable-PSRemoting -SkipNetworkProfileCheck -Force
+
+          winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+          winrm set winrm/config/client '@{TrustedHosts="*"}'
+
+          $listener = winrm enumerate winrm/config/listener |
+            Select-String 'Transport = HTTP'
+          if ($null -eq $listener) {
+            winrm create winrm/config/Listener?Address=*+Transport=HTTP
+          }
+
+          if (-not (Get-NetFirewallRule -DisplayName 'Allow WinRM 5985' -ErrorAction SilentlyContinue)) {
+            New-NetFirewallRule `
+              -DisplayName 'Allow WinRM 5985' `
+              -Direction Inbound `
+              -Action Allow `
+              -Protocol TCP `
+              -LocalPort 5985 | Out-Null
+          }
+
+          Restart-Service WinRM
+
+          Start-Sleep -Seconds 15
+
+      - name: Windows | Verify WinRM listener on Windows
+        if: runner.os == 'Windows'
+        timeout-minutes: 1
+        shell: pwsh
+        run: |
+          winrm enumerate winrm/config/listener
+
+          Test-NetConnection -ComputerName 127.0.0.1 -Port 5985 -InformationLevel Detailed
+
+      - name: Windows | Verify WinRS connection on Windows
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        timeout-minutes: 1
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $username = 'runneradmin'
+          $passwordPlain = "C0mplex!Pass-${{ github.run_id }}"
+
+          Write-Host ""
+          Write-Host "=== Verifying whoami for runneradmin ==="
+
+          winrs `
+            -r:http://localhost:5985/wsman `
+            -u:$username `
+            "-p:$passwordPlain" `
+            whoami
+
+      - name: WSL | Set up WSL
+        if: runner.os == 'Windows'
+        timeout-minutes: 10
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          additional-packages: >-
+            curl
+            ca-certificates
+            iproute2
+            netcat-openbsd
+            rsync
+
+      - name: WSL | Verify WSL workspace path
+        if: runner.os == 'Windows'
+        timeout-minutes: 1
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+          MOUNTED_REPO_DIR="$(wslpath '${{ github.workspace }}')"
+          test -d "$MOUNTED_REPO_DIR"
+          cd "$MOUNTED_REPO_DIR"
+          pwd
+          ls -la "$MOUNTED_REPO_DIR" | sed -n '1,20p'
+
+      - name: WSL | Copy repository to WSL home
+        if: runner.os == 'Windows'
+        timeout-minutes: 10
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+          MOUNTED_REPO_DIR="$(wslpath '${{ github.workspace }}')"
+          REPO_NAME="$(basename "$MOUNTED_REPO_DIR")"
+          WSL_REPO_DIR="$HOME/$REPO_NAME"
+          rm -rf "$WSL_REPO_DIR"
+          mkdir -p "$WSL_REPO_DIR"
+          rsync -a --delete "$MOUNTED_REPO_DIR"/ "$WSL_REPO_DIR"/
+          test -f "$WSL_REPO_DIR/pixi.toml"
+          ls -la "$WSL_REPO_DIR" | sed -n '1,20p'
+
+      - name: WSL | Verify WinRM port from WSL
+        if: runner.os == 'Windows'
+        timeout-minutes: 1
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+          WINDOWS_TEST_PORT='5985'
+          WINDOWS_TEST_HOST="$(ip route show default | awk '/default/ {print $3; exit}')"
+          if [ -z "$WINDOWS_TEST_HOST" ]; then
+            WINDOWS_TEST_HOST="$(awk '/nameserver/ {print $2; exit}' /etc/resolv.conf)"
+          fi
+          echo "Testing ${WINDOWS_TEST_HOST}:${WINDOWS_TEST_PORT}"
+          timeout 15 nc -vz "$WINDOWS_TEST_HOST" "$WINDOWS_TEST_PORT"
+
+      - name: WSL | Install Pixi in WSL
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+          if [ ! -x "$HOME/.pixi/bin/pixi" ]; then
+            curl -fsSL https://pixi.sh/install.sh | bash
+          fi
+          export PATH="$HOME/.pixi/bin:$PATH"
+          pixi --version
+
+      - name: WSL | Install Pixi environments for Windows scenario
+        if: runner.os == 'Windows'
+        timeout-minutes: 15
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.pixi/bin:$PATH"
+          REPO_DIR="$HOME/$(basename "$(wslpath '${{ github.workspace }}')")"
+          cd "$REPO_DIR"
+          pixi install -e default -e "${{ matrix.entry.pixi_py_env }}" -e "${{ matrix.entry.core_name }}"
+
+      - name: WSL | Verify WinRM from WSL with Pixi pywinrm
+        if: runner.os == 'Windows'
+        timeout-minutes: 2
+        shell: wsl-bash {0}
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.pixi/bin:$PATH"
+          REPO_DIR="$HOME/$(basename "$(wslpath '${{ github.workspace }}')")"
+          cd "$REPO_DIR"
+
+          WINDOWS_TEST_USER='runneradmin'
+          WINDOWS_TEST_PASSWORD='C0mplex!Pass-${{ github.run_id }}'
+          WINDOWS_TEST_PORT='5985'
+          WINDOWS_TEST_SCHEME='http'
+          WINDOWS_TEST_TRANSPORT='ntlm'
+          MOLECULE_OPTIONS='${{ inputs.molecule_options }}'
+          MOLECULE_SCENARIO_NAME='${{ inputs.scenario }}'
+          WINDOWS_TEST_HOST="$(ip route show default | awk '/default/ {print $3; exit}')"
+          if [ -z "$WINDOWS_TEST_HOST" ]; then
+            WINDOWS_TEST_HOST="$(awk '/nameserver/ {print $2; exit}' /etc/resolv.conf)"
+          fi
+
+          export WINDOWS_TEST_HOST WINDOWS_TEST_USER WINDOWS_TEST_PASSWORD
+          export WINDOWS_TEST_PORT WINDOWS_TEST_SCHEME WINDOWS_TEST_TRANSPORT
+          export MOLECULE_OPTIONS MOLECULE_SCENARIO_NAME
+
+          cat > /tmp/test-winrm.py <<'PY'
+          import os
+          import winrm
+
+          endpoint = f"http://{os.environ['WINDOWS_TEST_HOST']}:{os.environ['WINDOWS_TEST_PORT']}/wsman"
+          session = winrm.Session(
+              endpoint,
+              auth=(os.environ["WINDOWS_TEST_USER"], os.environ["WINDOWS_TEST_PASSWORD"]),
+              transport=os.environ["WINDOWS_TEST_TRANSPORT"],
+              server_cert_validation="ignore",
+          )
+          result = session.run_ps("Write-Output 'winrm-ok'")
+          if result.status_code != 0 or b"winrm-ok" not in result.std_out:
+              raise SystemExit(
+                  f"WinRM connectivity check failed: rc={result.status_code}, "
+                  f"stdout={result.std_out!r}, stderr={result.std_err!r}"
+              )
+          PY
+
+          for i in $(seq 1 10); do
+            echo "attempt=$i"
+            timeout 30 pixi run -e "${{ matrix.entry.core_name }}" python /tmp/test-winrm.py && break
+            if [ "$i" -eq 10 ]; then
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: WSL | Run scenario in tox env from WSL
+        if: runner.os == 'Windows'
+        id: run_tox_windows
+        timeout-minutes: 60
+        shell: wsl-bash {0}
+        run: |
+          set -uo pipefail
+          export PATH="$HOME/.pixi/bin:$PATH"
+          REPO_DIR="$HOME/$(basename "$(wslpath '${{ github.workspace }}')")"
+          cd "$REPO_DIR"
+
+          STEP_SUMMARY_PATH=""
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            STEP_SUMMARY_PATH="$(wslpath "$GITHUB_STEP_SUMMARY")"
+          fi
+
+          WINDOWS_TEST_USER='runneradmin'
+          WINDOWS_TEST_PASSWORD='C0mplex!Pass-${{ github.run_id }}'
+          WINDOWS_TEST_PORT='5985'
+          WINDOWS_TEST_SCHEME='http'
+          WINDOWS_TEST_TRANSPORT='ntlm'
+          WINDOWS_TEST_HOST="$(ip route show default | awk '/default/ {print $3; exit}')"
+          if [ -z "$WINDOWS_TEST_HOST" ]; then
+            WINDOWS_TEST_HOST="$(awk '/nameserver/ {print $2; exit}' /etc/resolv.conf)"
+          fi
+
+          export WINDOWS_TEST_HOST WINDOWS_TEST_USER WINDOWS_TEST_PASSWORD
+          export WINDOWS_TEST_PORT WINDOWS_TEST_SCHEME WINDOWS_TEST_TRANSPORT
+
+          MOLECULE_OPTIONS='${{ inputs.molecule_options }}'
+          MOLECULE_SCENARIO_NAME='${{ inputs.scenario }}'
+
+          export MOLECULE_OPTIONS MOLECULE_SCENARIO_NAME
+
+          set +e
+
+          pixi run -e "${{ matrix.entry.pixi_py_env }}" \
+            tox -e "${{ matrix.entry.tox_env }}" ${{ inputs.tox_args }} \
+            2>&1 | tee tox.log
+
+          rc=${PIPESTATUS[0]}
+
+          if grep -q "__TOX_SKIP__" tox.log; then
+            if [ -n "$STEP_SUMMARY_PATH" ]; then
+              echo "## Scenario Skipped" >> "$STEP_SUMMARY_PATH"
+              echo "- Scenario: ${{ inputs.scenario }}" >> "$STEP_SUMMARY_PATH"
+              echo "- Env: ${{ matrix.entry.name }}" >> "$STEP_SUMMARY_PATH"
+              echo "- Reason: unsupported combination" >> "$STEP_SUMMARY_PATH"
+            fi
             echo "::notice title=Skipped::${{ matrix.entry.name }}"
             exit 0
           fi
