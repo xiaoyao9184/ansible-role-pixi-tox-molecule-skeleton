@@ -1,6 +1,6 @@
-# {{ role_name }}
+# {{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('_', '-') }}
 
-`{{ role_name }}` is an Ansible role skeleton focused on test
+`{{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('_', '-') }}` is an Ansible role skeleton focused on test
 environment management. It provides a ready-to-use layout for running Molecule
 scenarios across multiple Python and Ansible Core versions with Pixi, tox,
 tox-ansible, and GitHub Actions.
@@ -194,7 +194,7 @@ Before using this skeleton as a real role, update:
 - `meta/main.yml`: set `author`, `role_name`, `description`, `license`, and
   supported platforms.
 - Molecule `converge.yml` files: replace
-  `your_name.{{ role_name }}` with the final role name.
+  `your_name.{{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('-', '_') }}` with the final role name.
 - `defaults/main.yml`, `tasks/main.yml`, `handlers/main.yml`, and
   `vars/main.yml`: add the actual role behavior.
 - `tests/`: add inventory and integration tests that match the role.

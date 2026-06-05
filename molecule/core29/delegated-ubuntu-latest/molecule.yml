@@ -1,0 +1,37 @@
+---
+# ref: [[#role_name_check|Go to molecule/README.md#role_name_check]]
+role_name_check: 1
+
+dependency:
+  name: galaxy
+  options:
+    # py35 + molecule 3.0.2.1 not support `requirements-file`
+    role-file: ${MOLECULE_SCENARIO_DIRECTORY}/requirements.yml
+
+driver:
+  # ref: [[#driver_default|Go to molecule/README.md#driver_default]]
+  name: delegated
+  options:
+    managed: false
+    ansible_connection_options:
+      ansible_connection: local
+
+platforms:
+  - name: local
+
+provisioner:
+  name: ansible
+  inventory:
+    hosts:
+      all:
+        hosts:
+          local:
+            ansible_connection: local
+  playbooks:
+    converge: converge.yml
+
+scenario:
+  name: delegated-ubuntu-latest
+
+verifier:
+  name: ansible

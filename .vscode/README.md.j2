@@ -115,7 +115,7 @@ but work normally in GitHub Actions Tox environment.
     INFO     Running docker > dependency
     ...
     Traceback (most recent call last):
-    File "/mnt/f/code/topic.ansible-role/ansible-role-skeleton/{{ role_name }}/.pixi/envs/core211/lib/python3.9/site-packages/resolvelib/resolvers.py", line 171, in _merge_into_criterion
+    File "/mnt/f/code/topic.ansible-role/ansible-role-skeleton/{{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('_', '-') }}/.pixi/envs/core211/lib/python3.9/site-packages/resolvelib/resolvers.py", line 171, in _merge_into_criterion
         crit = self.state.criteria
     KeyError: 'community.docker'
     ```

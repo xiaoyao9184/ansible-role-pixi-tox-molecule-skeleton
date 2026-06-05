@@ -1,2 +1,2 @@
 ---
-# defaults file for {{ role_name }}
+# defaults file for {{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('_', '-') }}

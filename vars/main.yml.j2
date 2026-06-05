@@ -1,2 +1,2 @@
 ---
-# vars file for {{ role_name }}
+# vars file for {{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('_', '-') }}

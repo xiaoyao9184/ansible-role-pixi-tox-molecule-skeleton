@@ -2,4 +2,4 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - {{ role_name }}
+    - your_name.{{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('-', '_') }}

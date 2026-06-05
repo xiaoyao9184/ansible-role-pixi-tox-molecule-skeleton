@@ -2,6 +2,7 @@
 
 molecule/*/.cache/
 molecule/*/.ansible/
+.env.yml
 
 .tox/
 tox/*/pyproject.toml

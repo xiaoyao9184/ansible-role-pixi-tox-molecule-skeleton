@@ -91,7 +91,7 @@ jobs:
           pixi-version: v0.67.1
           cache: true
           cache-key: pixi-${{ matrix.entry.tox_env }}-
-          cache-write: ${{ inputs.scenario == 'default' }}
+          cache-write: ${{ inputs.scenario == 'default-ubuntu-latest' }}
           environments: >-
             default
             ${{ matrix.entry.pixi_py_env }}
