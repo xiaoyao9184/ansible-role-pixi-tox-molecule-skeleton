@@ -1,0 +1,42 @@
+---
+# ref: [[#role_name_check|Go to molecule/README.md#role_name_check]]
+role_name_check: 1
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ${MOLECULE_SCENARIO_DIRECTORY}/requirements.yml
+
+driver:
+  # ref: [[#driver_default|Go to molecule/README.md#driver_default]]
+  name: delegated
+  options:
+    managed: false
+
+platforms:
+  - name: winrm
+
+provisioner:
+  name: ansible
+  inventory:
+    hosts:
+      all:
+        hosts:
+          winrm:
+            ansible_connection: winrm
+            ansible_host: ${WINDOWS_TEST_HOST}
+            ansible_port: ${WINDOWS_TEST_PORT}
+            ansible_user: ${WINDOWS_TEST_USER}
+            ansible_password: ${WINDOWS_TEST_PASSWORD}
+            ansible_winrm_transport: ${WINDOWS_TEST_TRANSPORT}
+            ansible_winrm_scheme: ${WINDOWS_TEST_SCHEME}
+            ansible_winrm_server_cert_validation: ignore
+            ansible_shell_type: powershell
+  playbooks:
+    converge: converge.yml
+
+scenario:
+  name: delegated-windows-2022
+
+verifier:
+  name: ansible

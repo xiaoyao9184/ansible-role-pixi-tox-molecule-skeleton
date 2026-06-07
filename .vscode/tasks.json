@@ -268,14 +268,23 @@
             "id": "moleculeScenario",
             "type": "pickString",
             "description": "Select the Molecule scenario name",
-            "default": "default",
+            "default": "default-ubuntu-latest",
             // Consistent with the molecule/core*/* directory
             "options": [
-                "delegated-ubuntu-latest",
                 "default-ubuntu-latest",
-                "default-macos-latest",
+                "default-ubuntu-22.04",
+                "delegated-ubuntu-22.04",
+                "delegated-windows-latest",
+                "delegated-windows-2022",
                 "default-windows-latest",
+                "default-windows-2022",
+                "default-macos-latest",
+                "default-macos-26",
+                "default-macos-14",
                 "docker-debian-13",
+                "docker-debian-12",
+                "docker-debian-11",
+                "docker-debian-10",
             ]
         }
     ]

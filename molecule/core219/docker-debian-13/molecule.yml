@@ -12,7 +12,7 @@ driver:
 
 platforms:
   - name: docker
-    image: jrei/systemd-debian:13
+    image: geerlingguy/docker-debian13-ansible
     privileged: true
     command: /lib/systemd/systemd
     # tmpfs:

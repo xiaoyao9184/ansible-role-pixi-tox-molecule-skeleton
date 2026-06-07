@@ -1,0 +1,11 @@
+---
+collections:
+  # Fixed the issue of missing Docker modules
+  # When py36/37 + core 2.9 + molecule 3.6.1 + molecule-docker 1.1.0:
+  # molecule-docker require_collection "community.docker": "1.9.1",
+  # However, the version installed by ansible-compat will not be used.
+  # And ansible 2.9 need community.docker < 3.0.0
+  # see https://github.com/ansible-collections/community.docker/issues/477
+  - name: community.docker
+    version: "<3.0.0"
+roles: []
