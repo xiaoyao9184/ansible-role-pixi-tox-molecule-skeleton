@@ -1,6 +1,9 @@
 [workspace]
 name = "ansible-role-{{ role_name | regex_replace('^ansible[-_]role[-_]', '') | replace('_', '-') }}"
 channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[feature.py35]
 platforms = ["linux-64", "osx-64"]
 
 [feature.py35.dependencies]
@@ -13,6 +16,9 @@ tox = "*"
 generate-tox-deps = "echo 'py35 does not use dependencies defined in pixi'"
 tox = { cmd = "tox -c tox/py35/tox.ini", depends-on = ["generate-tox-deps"] }
 
+[feature.py36]
+platforms = ["linux-64", "osx-64"]
+
 [feature.py36.dependencies]
 python = "3.6.*"
 pip = "*"
@@ -22,6 +28,9 @@ tox = "*"
 [feature.py36.tasks]
 generate-tox-deps = "echo 'py36 does not use dependencies defined in pixi'"
 tox = { cmd = "tox -c tox/py36/tox.ini", depends-on = ["generate-tox-deps"] }
+
+[feature.py37]
+platforms = ["linux-64", "osx-64"]
 
 [feature.py37.dependencies]
 python = "3.7.*"

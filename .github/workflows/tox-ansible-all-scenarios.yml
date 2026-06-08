@@ -46,3 +46,4 @@ jobs:
       scenario: ${{ matrix.scenario_name }}
       tox_args: ${{ inputs.tox_args || '' }}
       molecule_options: ${{ inputs.molecule_options || '' }}
+    secrets: inherit
