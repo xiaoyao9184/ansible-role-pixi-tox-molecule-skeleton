@@ -32,6 +32,8 @@ provisioner:
             ansible_winrm_scheme: ${WINDOWS_TEST_SCHEME}
             ansible_winrm_server_cert_validation: ignore
             ansible_shell_type: powershell
+            ansible_become_method: runas
+            ansible_become_user: System
   playbooks:
     converge: converge.yml
 
